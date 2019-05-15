@@ -1,0 +1,108 @@
+#importing necessary lib
+
+import pygame
+import abc
+import random
+#Create constant for colors
+
+WHITE = (255,255,255)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+#make a class called Drawable
+class Drawable(metaclass = abc.ABCMeta):
+	def __init__(self,x=0,y=0):
+		self.__x=x
+		self.__y=y
+		
+	def getLoc(self):
+		return (self.__x, self.__y)
+		
+	def setLoc(self,p):
+		self.__x = p[0]
+		self.__y = p[1]
+	
+	def moveDown(self):
+		new_y = random.randint(6,10)
+		self.__y += new_y
+		if self.__y >= 400:
+			self.__y = 400
+	
+	@abc.abstractmethod
+	def draw(self,surface):
+		pass
+
+
+#Subclass of Drawable
+class Rectangle(Drawable):
+	def __init__(self, x = 0, y = 0, width = 0, height = 0, color = (0,0,0,0)):
+		super().__init__(x, y)
+		self.__color = color
+		self.__width = x + width
+		self.__height = y + height
+
+	def getWH(self):
+		return (self.__width, self.__height)
+
+	def draw(self, surface):
+		location = self.getLoc()
+		x = location[0]
+		y = location[1]
+		dimension = self.getWH()
+		width = dimension[0]
+		height = dimension[1]
+		pygame.draw.rect(surface, self.__color,(x, y,width,height))
+
+#Drawable's subclass
+class Snowflake(Drawable):
+	def __init__(self, x = 0, y = 0):
+		super().__init__(x,y)
+	
+
+	def draw(self, surface):
+		location = self.getLoc()
+		x = location[0]
+		y = location[1]
+		pygame.draw.line(surface, WHITE, (x - 5,y), (x + 5, y))
+		pygame.draw.line(surface,WHITE, (x, y - 5),(x,y+5))
+		pygame.draw.line(surface, WHITE, (x - 5, y - 5), (x + 5, y + 5))
+		pygame.draw.line(surface, WHITE, (x - 5, y + 5), (x + 5, y - 5))
+
+
+#Create a surface
+DISPLAYSURF = pygame.display.set_mode((400,600), 0, 32)
+
+#plane for ground and sky
+ground_plane = Rectangle(0,400, 400, 200, GREEN)
+
+
+sky_plane = Rectangle(0, 0, 400, 400, BLUE)
+
+#FPS to be used later
+FPS = 30
+fpsClock = pygame.time.Clock()
+
+drawables = []
+
+#A loop to perform pygame
+while True:
+	ground_plane.draw(DISPLAYSURF)
+	sky_plane.draw(DISPLAYSURF)
+
+	for x in range(1,10):
+		x_location = random.randint(1,400)
+		snowflake = Snowflake(x_location, 0)
+		drawables.append(snowflake)
+
+	for drawable in range(len(drawables)):
+		if isinstance(drawables[drawable], Snowflake) == True:
+			drawables[drawable].moveDown()
+			drawables[drawable].draw(DISPLAYSURF)
+	
+	for event in pygame.event.get():
+		if event.type==pygame.QUIT:
+			pygame.quit()
+			exit()
+
+	pygame.display.update()
+	fpsClock.tick(FPS)
